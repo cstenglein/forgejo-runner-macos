@@ -21,10 +21,12 @@ No upstream runner source fix was needed. The build manifest is populated as an
 XML plist and then converted to JSON because editing JSON directly with `plutil`
 failed on the target Mac.
 
-Intel, LaunchDaemon deployment, an authenticated end-to-end Forgejo job, remote
+Intel, an authenticated end-to-end Forgejo job, remote
 checkout, cache action round trips and artifact upload/download are not yet
 verified. Local `runner exec` copies the checkout itself; it does not run a real
-remote checkout action. No release has been published.
+remote checkout action. The LaunchDaemon installer and GitHub release workflow
+are included; see [unattended service setup](SERVICE.md). Publication and
+platform verification are tracked in the repository's Actions and Releases.
 
 ## Requirements
 
@@ -94,8 +96,8 @@ The script checks the build checksum and installs only the binary, replacing an
 existing binary at that destination. It does not request sudo, register a runner,
 write credentials, modify PATH or start a service.
 
-Registration and the server's LaunchDaemon setup are separate deployment steps.
+Registration and the server's LaunchDaemon setup are separate deployment steps;
+see [SERVICE.md](SERVICE.md) for the installer and lifecycle commands.
 For unattended operation, use a dedicated non-admin account, an explicit PATH
 (interactive NVM initialization is not loaded by launchd), and private runtime
-configuration outside this repository. A service configuration and lifecycle
-commands will be added when deployment has been tested.
+configuration outside this repository.

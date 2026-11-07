@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key><string>io.github.cstenglein.forgejo-runner</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Library/ForgejoRunner/bin/forgejo-runner</string>
+        <string>daemon</string>
+        <string>--config</string>
+        <string>/Library/ForgejoRunner/etc/config.yaml</string>
+    </array>
+    <key>UserName</key><string>_forgejo_runner</string>
+    <key>GroupName</key><string>_forgejo_runner</string>
+    <key>WorkingDirectory</key><string>/Library/ForgejoRunner/home</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key><string>/Library/ForgejoRunner/home</string>
+        <key>PATH</key><string>/opt/homebrew/opt/node@24/bin:/usr/local/opt/node@24/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>TMPDIR</key><string>/Library/ForgejoRunner/home/tmp/</string>
+    </dict>
+    <key>RunAtLoad</key><true/>
+    <key>KeepAlive</key><true/>
+    <key>ThrottleInterval</key><integer>10</integer>
+    <key>ExitTimeOut</key><integer>45</integer>
+    <key>ProcessType</key><string>Background</string>
+    <key>Umask</key><integer>63</integer>
+    <key>StandardOutPath</key><string>/Library/ForgejoRunner/home/logs/runner.log</string>
+    <key>StandardErrorPath</key><string>/Library/ForgejoRunner/home/logs/runner.log</string>
+</dict>
+</plist>

@@ -1,0 +1,104 @@
+name: macOS build and release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*-macos.*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  build:
+    name: Build and test darwin/${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: amd64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - name: Set build version
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [[ "$REF_TYPE" == tag ]]; then
+            [[ "$REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-macos\.[0-9]+$ ]] || exit 1
+            version=${REF_NAME#v}
+          else
+            version="13.2.1-dev.${GITHUB_SHA:0:8}"
+          fi
+          printf 'BUILD_VERSION=%s\n' "$version" >> "$GITHUB_ENV"
+      - name: Check native architecture and script syntax
+        env:
+          EXPECTED_ARCH: ${{ matrix.arch }}
+        run: |
+          test "$(go env GOHOSTARCH)" = "$EXPECTED_ARCH"
+          for script in contrib/macos/*.sh; do /bin/bash -n "$script"; done
+          plutil -lint contrib/macos/launchdaemon.plist
+          node --test contrib/macos/service-config.test.js
+      - name: Build the checked-out source
+        run: ./contrib/macos/build.sh "$BUILD_VERSION"
+      - name: Run native macOS checks
+        run: ./contrib/macos/test.sh
+      - name: Package matching source, manifest and checksums
+        run: ./contrib/macos/package.sh
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: darwin-${{ matrix.arch }}
+          path: dist/release/${{ env.BUILD_VERSION }}/darwin-${{ matrix.arch }}/
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: darwin-*
+          path: artifacts
+      - name: Verify and assemble release assets
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: node contrib/macos/assemble-release.js artifacts release
+      - name: Publish tagged release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$RELEASE_TAG" release/* --verify-tag \
+            --title "Forgejo Runner ${RELEASE_TAG#v} for macOS" \
+            --notes-file release-notes.txt

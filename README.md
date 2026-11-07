@@ -9,11 +9,26 @@ be included and reviewed.
 with Go 1.26.8 and Node.js 24.22.2. Upstream short tests pass with Docker/LXC
 features disabled. The runner's Go source is unchanged from v13.2.1; the macOS
 build manifest tooling includes a compatibility fix for `plutil`.
-No release has been published. Intel, service deployment, and an authenticated
-end-to-end Forgejo workflow are not yet verified.
+GitHub Actions builds and tests Apple Silicon and Intel executables natively;
+see the [Actions runs](https://github.com/cstenglein/forgejo-runner-macos/actions)
+for current platform results. An authenticated end-to-end Forgejo job remains a
+separate deployment check.
 
 This is not an official Forgejo macOS release. Upstream officially supports and
 tests Linux. macOS packaging is also available independently through Homebrew.
+
+## Use a release
+
+Download your platform's executable and `SHA256SUMS` from
+[Releases](https://github.com/cstenglein/forgejo-runner-macos/releases):
+
+- Apple Silicon: `forgejo-runner-<version>-darwin-arm64`
+- Intel: `forgejo-runner-<version>-darwin-amd64`
+
+Compare the executable's `shasum -a 256` output with its entry in `SHA256SUMS`,
+mark it executable with `chmod +x`, and run it with `--version` before configuring
+it. Each release includes matching source, license and build manifests. These
+community executables have no Developer ID signature or Apple notarization.
 
 ## Build, test and package
 
@@ -49,8 +64,17 @@ git fetch upstream --tags
 ```
 
 Use a new `macos.N` suffix for community releases based on the same upstream
-version. Do not move published release tags. GitHub CI and automated publishing
-will be added after local verification.
+version. Do not move published release tags. Pushes to `main`, pull requests and
+manual workflow runs build and test both architectures. Pushing a tag such as
+`v13.2.1-macos.1` publishes that exact commit after both builds pass, with matching
+source, per-architecture provenance, license and aggregate SHA-256 checksums.
+
+## Run as an unattended server
+
+See [LaunchDaemon installation](contrib/macos/SERVICE.md). The service starts at
+boot as a dedicated non-admin user and restarts when it exits. Private instance
+configuration is stored outside this checkout. Building and publishing releases
+do not require your Forgejo URL or runner credentials.
 
 ## License and original documentation
 
