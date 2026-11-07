@@ -1,6 +1,7 @@
 #!/bin/bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -euo pipefail
+trap 'printf "Service installation failed at line %s.\n" "$LINENO" >&2' ERR
 source "$(dirname "$0")/common.sh"
 
 [[ $# -eq 1 ]] || die 'Usage: sudo install-service.sh /absolute/private-config.json'
@@ -23,8 +24,15 @@ FORGEJO_SERVICE_VALIDATE_ONLY=1 "$node_binary" "$MACOS_SCRIPT_DIR/service-config
 [[ $EUID -eq 0 ]] || die 'Administrator privileges are required. Run this script with sudo.'
 
 if dscl . -read "/Users/$service_user" UniqueID >/dev/null 2>&1; then
-    [[ $(dscl . -read "/Users/$service_user" NFSHomeDirectory) == "NFSHomeDirectory: $service_root/home" ]] || die 'Existing service account has an unexpected home.'
-    [[ $(dscl . -read "/Users/$service_user" UserShell) == 'UserShell: /usr/bin/false' ]] || die 'Existing service account has an unexpected shell.'
+    account_id=$(dscl . -read "/Users/$service_user" UniqueID | awk '{print $2}')
+    [[ $account_id =~ ^[0-9]+$ && $account_id -ge 400 && $account_id -lt 500 ]] || die 'Existing account is not an expected system service user.'
+    [[ $(dscl . -read "/Groups/$service_user" PrimaryGroupID) == "PrimaryGroupID: $account_id" ]] || die 'Existing service group does not match the account.'
+    [[ $(dscl . -read "/Users/$service_user" PrimaryGroupID) == "PrimaryGroupID: $account_id" ]] || die 'Existing account has an unexpected primary group.'
+    # A previous interrupted install may have created IDs but not these fields.
+    existing_home=$(dscl . -read "/Users/$service_user" NFSHomeDirectory 2>/dev/null || true)
+    existing_shell=$(dscl . -read "/Users/$service_user" UserShell 2>/dev/null || true)
+    [[ $existing_home == 'No such key: NFSHomeDirectory' || -z $existing_home || $existing_home == "NFSHomeDirectory: $service_root/home" ]] || die 'Existing service account has an unexpected home.'
+    [[ $existing_shell == 'No such key: UserShell' || -z $existing_shell || $existing_shell == 'UserShell: /usr/bin/false' ]] || die 'Existing service account has an unexpected shell.'
     case " $(id -Gn "$service_user") " in *' admin '*) die 'The service account must not be an administrator.' ;; esac
 else
     used_ids=$( { dscl . -list /Users UniqueID; dscl . -list /Groups PrimaryGroupID; } | awk '{print $NF}')
@@ -34,18 +42,17 @@ else
     ! dscl . -read "/Groups/$service_user" >/dev/null 2>&1 || die 'A group with the service account name already exists.'
     dscl . -create "/Groups/$service_user"
     dscl . -create "/Groups/$service_user" PrimaryGroupID "$account_id"
-    dscl . -create "/Groups/$service_user" GeneratedUID "$(uuidgen)"
     dscl . -create "/Users/$service_user"
     dscl . -create "/Users/$service_user" UniqueID "$account_id"
     dscl . -create "/Users/$service_user" PrimaryGroupID "$account_id"
-    dscl . -create "/Users/$service_user" GeneratedUID "$(uuidgen)"
-    dscl . -create "/Users/$service_user" RealName 'Forgejo Actions Runner'
-    dscl . -create "/Users/$service_user" NFSHomeDirectory "$service_root/home"
-    dscl . -create "/Users/$service_user" UserShell /usr/bin/false
-    dscl . -create "/Users/$service_user" Password '*'
-    dscl . -create "/Users/$service_user" AuthenticationAuthority ';DisabledUser;'
-    dscl . -create "/Users/$service_user" IsHidden 1
 fi
+# Directory Services assigns GeneratedUID automatically. Replacing that protected
+# value is unnecessary and can be rejected even when the installer runs as root.
+dscl . -create "/Users/$service_user" RealName 'Forgejo Actions Runner'
+dscl . -create "/Users/$service_user" NFSHomeDirectory "$service_root/home"
+dscl . -create "/Users/$service_user" UserShell /usr/bin/false
+dscl . -create "/Users/$service_user" Password '*'
+dscl . -create "/Users/$service_user" IsHidden 1
 
 if launchctl print "system/$label" >/dev/null 2>&1; then
     launchctl bootout system "$plist"
@@ -69,6 +76,7 @@ sudo -u "$service_user" /usr/bin/env -i HOME="$service_root/home" PATH="$service
 # Keep AC-powered server operation independent of display sleep and power outages.
 pmset -c sleep 0 autorestart 1
 logfile="$service_root/home/logs/runner.log"
+rm -f "$service_root/status.json"
 log_offset=0
 [[ ! -f $logfile ]] || log_offset=$(stat -f %z "$logfile")
 launchctl enable "system/$label"
