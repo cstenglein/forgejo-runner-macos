@@ -6,6 +6,14 @@ forgejo-runner*
 coverage.txt
 /config.yaml
 
+# Machine-specific configuration, credentials and runner state
+/.local/
+/.runner*
+/config.local*.yaml
+/config.local*.yml
+/runner-data/
+/.env.*
+
 # MS VSCode
 .vscode
 __debug_bin

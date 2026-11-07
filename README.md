@@ -1,4 +1,66 @@
-# Forgejo Runner
+# Forgejo Runner for macOS
+
+Community macOS build tooling and an editable source fork of Forgejo Runner,
+starting from upstream **v13.2.1**. This repository retains the full upstream
+history. Builds compile the source in this checkout so future local fixes can
+be included and reviewed.
+
+**Status:** Repository and build tooling prepared. The macOS build and native
+workflow tests have not been run yet. No release or installed runner is available
+from this project at this stage. Apple Silicon is the first verification target;
+Intel has not been verified.
+
+This is not an official Forgejo macOS release. Upstream officially supports and
+tests Linux. macOS packaging is also available independently through Homebrew.
+
+## Build, test and package
+
+Install Git, Xcode or Command Line Tools, and Go, then:
+
+```sh
+git clone https://github.com/cstenglein/forgejo-runner-macos.git
+cd forgejo-runner-macos
+./contrib/macos/build.sh 13.2.1-macos.1
+./contrib/macos/test.sh
+```
+
+The scripts are initially unverified; these commands describe the intended build
+path. See [macOS build tools](contrib/macos/README.md) for prerequisites, the DNS
+probe, installation and packaging. Build output is in `dist/macos/`.
+
+The macOS build omits `netgo` and Linux static-linker flags. The runner's Go code,
+dependency files and upstream Makefile remain unchanged at this initial stage.
+
+No Forgejo instance address, runner credential or personal GitHub token is needed
+to build. Keep deployment configuration outside this public checkout. `.local/`,
+local credential files and runner state are ignored by Git.
+
+## Follow upstream
+
+The upstream base is tag `v13.2.1`, commit
+`c4a92ffa5e3a400ae7e9c40a2914e649eb338ad7`.
+
+```sh
+git remote add upstream https://code.forgejo.org/forgejo/runner.git
+git fetch upstream --tags
+# Merge a reviewed upstream release in a branch and rerun the macOS checks.
+```
+
+Use a new `macos.N` suffix for community releases based on the same upstream
+version. Do not move published release tags. GitHub CI and automated publishing
+will be added after local verification.
+
+## License and original documentation
+
+The upstream source and macOS additions are distributed under GPL-3.0-or-later;
+existing per-file notices are retained. See [LICENSE](LICENSE), the original
+[upstream README](README.upstream.md), and [CONTRIBUTING.md](CONTRIBUTING.md).
+The [Windows sibling project](https://github.com/cstenglein/forgejo-runner-windows)
+provides the reference structure for this community fork.
+
+---
+
+## Upstream Forgejo Runner
 
 A daemon that connects to a Forgejo instance and runs jobs for continuous integration. The [installation and usage instructions](https://forgejo.org/docs/next/admin/actions/) are part of the Forgejo documentation. Forgejo Runner can also run workflows locally and act as a cache.
 
