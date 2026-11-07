@@ -5,10 +5,12 @@ starting from upstream **v13.2.1**. This repository retains the full upstream
 history. Builds compile the source in this checkout so future local fixes can
 be included and reviewed.
 
-**Status:** Repository and build tooling prepared. The macOS build and native
-workflow tests have not been run yet. No release or installed runner is available
-from this project at this stage. Apple Silicon is the first verification target;
-Intel has not been verified.
+**Status:** Native ARM64 builds and local host workflow checks pass on macOS 27.2
+with Go 1.26.8 and Node.js 24.22.2. Upstream short tests pass with Docker/LXC
+features disabled. The runner's Go source is unchanged from v13.2.1; the macOS
+build manifest tooling includes a compatibility fix for `plutil`.
+No release has been published. Intel, service deployment, and an authenticated
+end-to-end Forgejo workflow are not yet verified.
 
 This is not an official Forgejo macOS release. Upstream officially supports and
 tests Linux. macOS packaging is also available independently through Homebrew.
@@ -24,12 +26,12 @@ cd forgejo-runner-macos
 ./contrib/macos/test.sh
 ```
 
-The scripts are initially unverified; these commands describe the intended build
-path. See [macOS build tools](contrib/macos/README.md) for prerequisites, the DNS
-probe, installation and packaging. Build output is in `dist/macos/`.
+See [macOS build tools](contrib/macos/README.md) for verification coverage,
+prerequisites, the DNS probe, installation and packaging. Build output is in
+`dist/macos/`.
 
 The macOS build omits `netgo` and Linux static-linker flags. The runner's Go code,
-dependency files and upstream Makefile remain unchanged at this initial stage.
+dependency files and upstream Makefile remain unchanged.
 
 No Forgejo instance address, runner credential or personal GitHub token is needed
 to build. Keep deployment configuration outside this public checkout. `.local/`,

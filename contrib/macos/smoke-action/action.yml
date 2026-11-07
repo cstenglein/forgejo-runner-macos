@@ -1,0 +1,9 @@
+name: Native macOS Node.js smoke test
+description: Verify host identity, command files, PATH and post-action state.
+outputs:
+  multiline:
+    description: A multiline output passed to the next workflow step.
+runs:
+  using: node24
+  main: main.js
+  post: post.js

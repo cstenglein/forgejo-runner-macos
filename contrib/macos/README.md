@@ -2,14 +2,29 @@
 
 These scripts compile the actual source in this checkout. They do not download
 a prebuilt runner or copy the Windows fork's source fixes. The runner code is
-initially unchanged from upstream v13.2.1.
+unchanged from upstream v13.2.1.
 
 ## Status
 
-Build tooling has been prepared. No macOS build, runner test, service installation
-or release has been completed yet. The scripts and smoke workflow still need to
-be exercised on the target Mac. ARM64 is the first target; Intel support must be
-verified separately before being advertised as tested.
+Verified locally on 2026-11-07 using macOS 27.2 ARM64, Go 1.26.8 and Node.js
+24.22.2:
+
+- Native ARM64 executable, version output and JSON build manifest.
+- Upstream short test suite with Docker and LXC feature tests disabled.
+- Host workflow with the default shell and explicit POSIX `sh`.
+- Local checkout copying, native Node.js action, runner OS/architecture context,
+  environment files, multiline outputs and PATH entries containing spaces.
+- Expected step failure with `continue-on-error`, and post-action state/cleanup.
+- Native Go DNS and certificate-verified HTTPS access to a private instance.
+
+No upstream runner source fix was needed. The build manifest is populated as an
+XML plist and then converted to JSON because editing JSON directly with `plutil`
+failed on the target Mac.
+
+Intel, LaunchDaemon deployment, an authenticated end-to-end Forgejo job, remote
+checkout, cache action round trips and artifact upload/download are not yet
+verified. Local `runner exec` copies the checkout itself; it does not run a real
+remote checkout action. No release has been published.
 
 ## Requirements
 
@@ -18,8 +33,7 @@ verified separately before being advertised as tested.
 - Go. The scripts select `toolchain` from `go.mod` (currently `go1.26.8`), which Go
   may download on first use. An explicit `GOTOOLCHAIN` override is supported and
   the actual compiler version is recorded in the build manifest.
-- Node.js on the service's PATH for JavaScript actions. The minimal smoke workflow
-  does not exercise Node actions, remote checkout, cache or artifacts.
+- Node.js 24 on the service's PATH for the smoke workflow's JavaScript action.
 
 Scripts use `/bin/bash` and macOS tools, including `plutil` and `shasum`. Homebrew
 Bash, Python and Docker are not required for this native host setup.
@@ -35,7 +49,7 @@ Bash, Python and Docker are not required for this native host setup.
 Build output is in `dist/macos/`. The JSON manifest records the revision, dirty
 source state, version, architecture, compiler, build tags, CGO and binary SHA-256.
 The build omits `netgo` and Linux static-linker flags and uses native macOS build
-settings. No source bug fixes are included at this initial stage.
+settings. No upstream runner source bug fixes are included.
 
 ## Test
 
@@ -46,9 +60,10 @@ settings. No source bug fixes are included at this initial stage.
 ```
 
 This runs upstream short tests with Docker and LXC features disabled, validates
-the smoke workflow, and executes it locally on the host. Failures must be
-investigated; this initial tooling does not skip macOS failures or claim that
-the full suite is already compatible. The optional probe is a separate Go
+the smoke workflow/action, and executes it locally on the host. The deliberate
+`exit 42` step is expected to show a failure, followed by a successful outcome
+check and an overall successful job. Failures are not silently skipped. The
+optional probe is a separate Go
 program, not an authenticated runner connection or an end-to-end Forgejo job.
 
 Host execution runs workflow commands as the current user. Keep the runner

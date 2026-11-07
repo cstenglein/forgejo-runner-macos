@@ -4,10 +4,13 @@ on:
 jobs:
   smoke:
     runs-on: macos-arm64
-    defaults:
-      run:
-        shell: bash
     steps:
+      # `runner exec` handles this locally by copying the checkout to the job's
+      # workspace; it does not authenticate to a Git hosting service.
+      - name: Populate the job workspace
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Check macOS and export environment
         id: macos
         run: |
@@ -22,3 +25,30 @@ jobs:
           test "$MACOS_RUNNER_SMOKE" = ok
           test "$PREVIOUS_RESULT" = ok
           printf '%s\n' 'Native macOS host workflow passed'
+      - name: Exercise a native Node.js action and post-action state
+        id: node
+        uses: ./contrib/macos/smoke-action
+        env:
+          EXPECTED_RUNNER_OS: ${{ runner.os }}
+          EXPECTED_RUNNER_ARCH: ${{ runner.arch }}
+      - name: Check PATH, Node environment and multiline output
+        env:
+          NODE_RESULT: ${{ steps.node.outputs.multiline }}
+        run: |
+          test "$MACOS_NODE_SMOKE" = ok
+          test "$NODE_RESULT" = "$(printf 'first line\nsecond line')"
+          test "$(macos-runner-smoke-tool)" = ok
+      - name: Check explicit POSIX shell
+        shell: sh
+        run: test "$(uname -s)" = Darwin
+      - name: Exercise a failing step
+        id: expected_failure
+        continue-on-error: true
+        run: exit 42
+      - name: Check failure outcome and continued execution
+        env:
+          OUTCOME: ${{ steps.expected_failure.outcome }}
+          CONCLUSION: ${{ steps.expected_failure.conclusion }}
+        run: |
+          test "$OUTCOME" = failure
+          test "$CONCLUSION" = success
