@@ -1,0 +1,24 @@
+name: Native macOS host smoke test
+on:
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: macos-arm64
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check macOS and export environment
+        id: macos
+        run: |
+          test "$(uname -s)" = Darwin
+          git --version
+          printf '%s\n' 'MACOS_RUNNER_SMOKE=ok' >> "$FORGEJO_ENV"
+          printf '%s\n' 'result=ok' >> "$FORGEJO_OUTPUT"
+      - name: Check environment and step output
+        env:
+          PREVIOUS_RESULT: ${{ steps.macos.outputs.result }}
+        run: |
+          test "$MACOS_RUNNER_SMOKE" = ok
+          test "$PREVIOUS_RESULT" = ok
+          printf '%s\n' 'Native macOS host workflow passed'
