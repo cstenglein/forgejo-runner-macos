@@ -69,6 +69,8 @@ chmod 0640 "$service_root/etc/config.yaml" "$service_root/etc/runner-token"
 install -o root -g wheel -m 0644 "$MACOS_SCRIPT_DIR/launchdaemon.plist" "$plist"
 
 # Verify tools with the actual service identity and a login-independent PATH.
+# Do not inherit the invoking administrator's private working directory.
+cd "$service_root/home"
 service_path='/opt/homebrew/opt/node@24/bin:/usr/local/opt/node@24/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin'
 sudo -u "$service_user" /usr/bin/env -i HOME="$service_root/home" PATH="$service_path" "$service_root/bin/forgejo-runner" --version
 sudo -u "$service_user" /usr/bin/env -i HOME="$service_root/home" PATH="$service_path" node --version

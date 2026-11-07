@@ -3,6 +3,9 @@
 The LaunchDaemon starts at boot without a desktop login. `KeepAlive` restarts
 the runner if it exits; launchd throttles restarts to ten-second intervals.
 The runner runs as the hidden non-admin `_forgejo_runner` account, not root.
+Installation and authenticated startup have been verified on macOS 27.2 ARM64.
+The boot registration is installed and enabled; a physical reboot is not part
+of the automated verification.
 
 ## Prepare
 

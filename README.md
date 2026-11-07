@@ -9,10 +9,11 @@ be included and reviewed.
 with Go 1.26.8 and Node.js 24.22.2. Upstream short tests pass with Docker/LXC
 features disabled. The runner's Go source is unchanged from v13.2.1; the macOS
 build manifest tooling includes a compatibility fix for `plutil`.
-GitHub Actions builds and tests Apple Silicon and Intel executables natively;
+Native ARM64 and Intel builds also pass on macOS 15 in GitHub Actions;
 see the [Actions runs](https://github.com/cstenglein/forgejo-runner-macos/actions)
-for current platform results. An authenticated end-to-end Forgejo job remains a
-separate deployment check.
+for current platform results. LaunchDaemon installation and authenticated startup
+are verified on macOS 27.2 ARM64. A full end-to-end Forgejo job remains a separate
+deployment check.
 
 This is not an official Forgejo macOS release. Upstream officially supports and
 tests Linux. macOS packaging is also available independently through Homebrew.

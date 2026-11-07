@@ -16,13 +16,17 @@ Verified locally on 2026-11-07 using macOS 27.2 ARM64, Go 1.26.8 and Node.js
   environment files, multiline outputs and PATH entries containing spaces.
 - Expected step failure with `continue-on-error`, and post-action state/cleanup.
 - Native Go DNS and certificate-verified HTTPS access to a private instance.
+- Native ARM64 and Intel builds, short tests and smoke workflows on macOS 15
+  through GitHub Actions.
+- LaunchDaemon installation and authenticated startup on macOS 27.2 ARM64,
+  using the dedicated non-admin account and a login-independent PATH.
 
 No upstream runner source fix was needed. The build manifest is populated as an
 XML plist and then converted to JSON because editing JSON directly with `plutil`
 failed on the target Mac.
 
-Intel, an authenticated end-to-end Forgejo job, remote
-checkout, cache action round trips and artifact upload/download are not yet
+An authenticated end-to-end Forgejo job, remote checkout, cache action round
+trips and artifact upload/download are not yet
 verified. Local `runner exec` copies the checkout itself; it does not run a real
 remote checkout action. The LaunchDaemon installer and GitHub release workflow
 are included; see [unattended service setup](SERVICE.md). Publication and
