@@ -24,7 +24,9 @@ reported_version=$("$stage/$binary" --version)
 [[ $reported_version == *"v$version"* ]] || die 'Binary reports an unexpected version.'
 
 manifest="$stage/build-manifest.json"
-/usr/bin/plutil -create json "$manifest"
+# plutil cannot reliably edit JSON in place on all macOS versions. Populate an
+# XML plist first, then convert the completed manifest to JSON.
+/usr/bin/plutil -create xml1 "$manifest"
 for key in Version Binary SourceRevision Architecture Go BuildTags BinarySHA256; do
     case "$key" in
         Version) value=$version ;;
@@ -39,6 +41,7 @@ for key in Version Binary SourceRevision Architecture Go BuildTags BinarySHA256;
 done
 /usr/bin/plutil -insert SourceDirty -bool "$dirty" "$manifest"
 /usr/bin/plutil -insert CGO -bool true "$manifest"
+/usr/bin/plutil -convert json -r "$manifest"
 mv "$stage/$binary" "$BUILD_DIR/$binary"
 mv "$manifest" "$BUILD_MANIFEST"
 printf '%s\nBuild output: %s\n' "$reported_version" "$BUILD_DIR/$binary"
