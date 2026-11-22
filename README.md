@@ -1,13 +1,13 @@
 # Forgejo Runner for macOS
 
 Community macOS build tooling and an editable source fork of Forgejo Runner,
-starting from upstream **v13.2.1**. This repository retains the full upstream
+starting from upstream **v13.2.2**. This repository retains the full upstream
 history. Builds compile the source in this checkout so future local fixes can
 be included and reviewed.
 
 **Status:** Native ARM64 builds and local host workflow checks pass on macOS 27.2
 with Go 1.26.8 and Node.js 24.22.2. Upstream short tests pass with Docker/LXC
-features disabled. The runner's Go source is unchanged from v13.2.1; the macOS
+features disabled. The runner's Go source is unchanged from v13.2.2; the macOS
 build manifest tooling includes a compatibility fix for `plutil`.
 Native ARM64 and Intel builds also pass on macOS 15 in GitHub Actions;
 see the [Actions runs](https://github.com/cstenglein/forgejo-runner-macos/actions)
@@ -38,7 +38,7 @@ Install Git, Xcode or Command Line Tools, and Go, then:
 ```sh
 git clone https://github.com/cstenglein/forgejo-runner-macos.git
 cd forgejo-runner-macos
-./contrib/macos/build.sh 13.2.1-macos.1
+./contrib/macos/build.sh 13.2.2-macos.1
 ./contrib/macos/test.sh
 ```
 
@@ -55,8 +55,8 @@ local credential files and runner state are ignored by Git.
 
 ## Follow upstream
 
-The upstream base is tag `v13.2.1`, commit
-`c4a92ffa5e3a400ae7e9c40a2914e649eb338ad7`.
+The upstream base is tag `v13.2.2`, commit
+`0e61343d1cb98d2a381d0d18f34aea408e66e4d2`.
 
 ```sh
 git remote add upstream https://code.forgejo.org/forgejo/runner.git
@@ -67,7 +67,7 @@ git fetch upstream --tags
 Use a new `macos.N` suffix for community releases based on the same upstream
 version. Do not move published release tags. Pushes to `main`, pull requests and
 manual workflow runs build and test both architectures. Pushing a tag such as
-`v13.2.1-macos.1` publishes that exact commit after both builds pass, with matching
+`v13.2.2-macos.1` publishes that exact commit after both builds pass, with matching
 source, per-architecture provenance, license and aggregate SHA-256 checksums.
 
 ## Run as an unattended server

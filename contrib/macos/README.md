@@ -2,7 +2,7 @@
 
 These scripts compile the actual source in this checkout. They do not download
 a prebuilt runner or copy the Windows fork's source fixes. The runner code is
-unchanged from upstream v13.2.1.
+unchanged from upstream v13.2.2.
 
 ## Status
 
@@ -49,7 +49,7 @@ Bash, Python and Docker are not required for this native host setup.
 ```sh
 ./contrib/macos/build.sh
 # Or assign a community version explicitly:
-./contrib/macos/build.sh 13.2.1-macos.1
+./contrib/macos/build.sh 13.2.2-macos.1
 ```
 
 Build output is in `dist/macos/`. The JSON manifest records the revision, dirty

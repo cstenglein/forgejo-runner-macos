@@ -51,7 +51,7 @@ jobs:
             [[ "$REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-macos\.[0-9]+$ ]] || exit 1
             version=${REF_NAME#v}
           else
-            version="13.2.1-dev.${GITHUB_SHA:0:8}"
+            version="13.2.2-dev.${GITHUB_SHA:0:8}"
           fi
           printf 'BUILD_VERSION=%s\n' "$version" >> "$GITHUB_ENV"
       - name: Check native architecture and script syntax

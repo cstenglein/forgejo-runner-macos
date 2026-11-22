@@ -7,7 +7,7 @@ source "$(dirname "$0")/common.sh"
 prepare_go
 cd "$PROJECT_ROOT"
 revision=$(git rev-parse HEAD)
-version=${1:-13.2.1-dev.$(git rev-parse --short=8 HEAD)}
+version=${1:-13.2.2-dev.$(git rev-parse --short=8 HEAD)}
 validate_version "$version"
 binary="forgejo-runner-$version-darwin-$GOARCH"
 module=$(awk '$1 == "module" {print $2; exit}' go.mod)
